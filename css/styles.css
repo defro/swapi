@@ -1,9 +1,37 @@
+/* -----------*/
+/* Page setup */
+/* -----------*/
+
 body {
     font-family: helvetica, arial, sans-serif;
     font-size: 20px;
     color: #333;
     margin: 0;
 }
+
+#container {
+    width: 100%;
+    margin-top: 200px;
+}
+
+/* --------*/
+/* Helpers */
+/* --------*/
+
+.hidden {
+    display: none;
+}
+
+.btn {
+    border: 1px solid #333;
+    border-radius: 3px;
+    background-color: white;
+    font-size: inherit;
+}
+
+/* -----------*/
+/* Sticky Nav */
+/* -----------*/
 
 .nav {
     left: 0;
@@ -40,6 +68,10 @@ body {
     margin-bottom: 5px;
 }
 
+/* ----------- */
+/* Loading bar */
+/* ----------- */
+
 .loading_bar_wrapper {
     box-sizing: border-box;
     width: 100%;
@@ -53,14 +85,9 @@ body {
     background-color: lightblue;
 }
 
-.hidden {
-    display: none;
-}
-
-#container {
-    width: 100%;
-    margin-top: 200px;
-}
+/* ------------- */
+/* Page sections */
+/* ------------- */
 
 .section_container {
     margin-bottom: 10px;
@@ -92,19 +119,33 @@ body {
     text-transform: capitalize;
 }
 
+/* ------------------- */
+/* Assocaited entities */
+/* ------------------- */
+
+.associated .heading {
+    padding: 10px;
+}
+
+.associated .title {
+    display: inline-block;
+}
+
+.associated .title h2 {
+    margin: 0;
+    padding: 0;
+}
+
+.associated .action {
+    float: right;
+}
+
 .associated .data_item {
     padding: 20px;
 }
 
 .associated .data_item .view {
     float: right;
-}
-
-.associated .data_item .view .view_entity {
-    border: 1px solid #333;
-    border-radius: 3px;
-    background-color: white;
-    font-size: inherit;
 }
 
 .associated .data_item:hover {
@@ -115,6 +156,10 @@ body {
 .associated .data_item:hover .view .view_entity {
     background-color: #9bc2cf;
 }
+
+/* ------------- */
+/* Media Queries */
+/* ------------- */
 
 @media screen and (min-width: 400px) {
     .nav {
