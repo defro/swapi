@@ -100,9 +100,20 @@ body {
     float: right;
 }
 
+.associated .data_item .view .view_entity {
+    border: 1px solid #333;
+    border-radius: 3px;
+    background-color: white;
+    font-size: inherit;
+}
+
 .associated .data_item:hover {
     cursor: pointer;
     background-color: lightblue;
+}
+
+.associated .data_item:hover .view .view_entity {
+    background-color: #9bc2cf;
 }
 
 @media screen and (min-width: 400px) {
