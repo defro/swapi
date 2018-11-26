@@ -1,4 +1,4 @@
-# swapi App
+# SWAPI App
 
 ## Intro
 
