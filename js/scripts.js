@@ -604,7 +604,7 @@ async function getAllData(callback) {
       setTimeout(function() {
         var bar_wrapper = document.querySelectorAll(".loading_bar_wrapper")[0];
         bar_wrapper.classList.add("hidden");
-      }, 500);
+      }, 100);
 
       callback();
     })
