@@ -278,6 +278,12 @@ async function getAllData(callback) {
 
     // determine if we have data for each entity
     var has_data = arr_types.reduce(function(reducer, type) {
+        // if we don't have this property, return false
+        if (!swapi.hasOwnProperty(type)) {
+            return false && reducer;
+        }
+
+        // if the property doesn't have keys, return false
         return Object.keys(swapi[type]).length > 0 && reducer;
     });
 
