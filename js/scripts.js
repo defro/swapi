@@ -40,20 +40,25 @@ function getXHR(url) {
 
 function getData(type, id) {
     return new Promise(function(resolve, reject) {
-        // if we've already stored the data, resolve the promise with it
-        if (Window.swapi[type].hasOwnProperty(id)) {
-            resolve(Window.swapi[type][id]);
+        // get swapi data from session storage
+        var swapi = getFromSession("swapi");
+        // if this data is not available locally
+        if (swapi[type].hasOwnProperty(id)) {
+            resolve(swapi[type][id]);
 
             // but if we haven't got the data
         } else {
             // request it from the swapi (returns a promise)
             getXHR("https://swapi.co/api/" + type + "/" + id + "/")
                 .then(function(res) {
-                    // parse the resulting json and instantiate the entity
-                    var entity = instantiate(type, JSON.parse(res));
+                    // parse the resulting json
+                    var data = JSON.parse(res);
 
-                    // store the entity to avoid repeat XHRs
-                    Window.swapi[type][id] = entity;
+                    // store the data to avoid repeat XHRs
+                    updateSwapiData(type, id, data);
+
+                    // instantiate the entity
+                    var entity = instantiate(type, data);
 
                     // resolve data_promise with response from getXHR promise
                     resolve(entity);
@@ -64,6 +69,56 @@ function getData(type, id) {
                 });
         }
     });
+}
+
+/**
+ *  Helper function for getting things from Session Storage
+ *  @key string key of property to return from storage
+ *  @return object from storage, or empty object
+ */
+
+function getFromSession(key) {
+    var value = sessionStorage.getItem(key);
+    value = JSON.parse(value);
+    // if value is null, return empty object
+    return value === null ? {} : value;
+}
+
+/**
+ *  Helper function for setting things in Session Storage
+ *  @key string key of property to return from storage
+ *  @return void
+ */
+
+function setInSession(key, data) {
+    var value = JSON.stringify(data);
+    sessionStorage.setItem(key, value);
+}
+
+/**
+ *  Helper function for updating swapi data in Session Storage
+ *  @type string type of swapi entity
+ *  @id numeric id of swapi entity
+ *  @return void
+ */
+
+function updateSwapiData(type, id, data) {
+    var swapi = getFromSession("swapi");
+    swapi[type][id] = data;
+    setInSession("swapi", swapi);
+}
+
+/**
+ *  Helper function for instantiating swapi entity from data
+ *  in Session Storage
+ *  @type string type of swapi entity
+ *  @id numeric id of swapi entity
+ *  @return void
+ */
+
+function getEntityFromSession(type, id) {
+    var swapi = getFromSession("swapi");
+    return instantiate(type, swapi[type][id]);
 }
 
 /**
@@ -103,8 +158,13 @@ function instantiate(type, data) {
  */
 
 async function getEntity(type, id) {
+    var entity;
+
+    // get swapi data from session storage
+    var swapi = getFromSession("swapi");
+
     // if this data is not available locally
-    if (!Window.swapi[type].hasOwnProperty(id)) {
+    if (!swapi[type].hasOwnProperty(id)) {
         // get it the data from the swapi. await the response as the
         // data is required to build the markup for the page
         var response = await getXHR(
@@ -115,11 +175,11 @@ async function getEntity(type, id) {
         var data = JSON.parse(response);
 
         // store it for access later, saving XHRs
-        Window.swapi[type][id] = instantiate(type, data);
+        // entity = instantiate(type, data);
+        updateSwapiData(type, id, data);
     }
 
-    var entity = Window.swapi[type][id];
-
+    entity = getEntityFromSession(type, id);
     return entity;
 }
 
@@ -151,366 +211,6 @@ function getIdFromURL(url) {
     return id;
 }
 
-// top level Entity constructor
-function Entity(data, arr_data_fields, arr_associated_fields, heading_field) {
-    this.arr_data_fields = arr_data_fields;
-    this.arr_associated_fields = arr_associated_fields;
-
-    this.data = {};
-    this.associated = {};
-    this.heading_field = heading_field;
-
-    if (this.heading_field !== "name") {
-        this.data.name = data[this.heading_field];
-    }
-
-    // populate entity data fields
-    // loop over data fields
-    for (var data_item of this.arr_data_fields) {
-        // if this data_item is present
-        if (data.hasOwnProperty(data_item)) {
-            // set it on this entity
-            this.data[data_item] = data[data_item];
-        }
-    }
-
-    // populate entity associated fields
-    // loop over assocaited fields
-    for (var obj_associated of this.arr_associated_fields) {
-        var title = Object.keys(obj_associated)[0];
-        var type = obj_associated[title];
-
-        // if this assocaited_entity is present
-        if (data.hasOwnProperty(title)) {
-            // set it on this entity as an empty array
-            this.associated[type] = [];
-
-            // loop over associated swapi urls
-            for (var url of data[title]) {
-                // extract their entity ids from the urls and add them to this array
-                this.associated[type].push(getIdFromURL(url));
-            }
-        }
-    }
-
-    /**
-     *  Print this entity's data items to the page
-     */
-
-    this.printData = function() {
-        var html =
-            '<div class="section_container">' +
-            "<h2>" +
-            this.data[this.heading_field] +
-            "</h2>" +
-            "<table><tbody>";
-
-        for (var key in this.data) {
-            // we've already used the name as the title
-            if (key === this.heading_field || key === "name") {
-                continue;
-            }
-
-            var field = key.replace(/_/g, " ");
-
-            html +=
-                '<tr class="data_item"><td class="field">' +
-                field +
-                "</td>" +
-                '<td class="value">' +
-                this.data[key] +
-                "</td></tr>";
-        }
-
-        html += "</tbody></table>";
-
-        // add built html to the DOM
-        document.getElementById("data").innerHTML = html;
-    };
-
-    /**
-     *  Print this entity's associated items to the page
-     *  Note: prints hidden items, which are unhidden when we have appropriate data
-     */
-
-    this.printAssociatedFields = function() {
-        var html = "";
-
-        // loop over assocaited fields
-        for (var entity in this.associated) {
-            html +=
-                '<div class="section_container associated" data-entity="' +
-                entity +
-                '">' +
-                "<h2>" +
-                entity +
-                "</h2>";
-
-            for (var id of this.associated[entity]) {
-                var value = id;
-
-                if (Window.swapi[entity].hasOwnProperty(id)) {
-                    value = Window.swapi[entity][id].data.name;
-                }
-
-                html +=
-                    '<div class="data_item' +
-                    (value === id ? " hidden" : "") +
-                    '" ' +
-                    'data-id="' +
-                    id +
-                    '">' +
-                    value +
-                    "</div>";
-            }
-
-            html += "</div>";
-        }
-
-        // add built html to the DOM
-        document.getElementById("associated").innerHTML = html;
-        this.populateData();
-    };
-
-    /**
-     *  Loop over all assocaited items, get the relevant data and process them
-     */
-
-    this.populateData = function() {
-        // loop over associated types
-        for (var type in this.associated) {
-            // loop over entity ids
-            for (var id of this.associated[type]) {
-                // get the data, either locally or from the swapi
-                getData(type, id)
-                    // add it to the page
-                    .then(this.populateDataItem.bind(null, type, id));
-            }
-        }
-    };
-
-    /**
-     *  For an individual associated item, locate it in them DOM, set it's name,
-     *  show it, and add click handler
-     *  @type string type of starwars entity
-     *  @id numeric id of starwas entity
-     *  @entity instantiated starwars entity
-     */
-
-    this.populateDataItem = function(type, id, entity) {
-        var selector =
-            '.associated[data-entity="' + type + '"] [data-id="' + id + '"]';
-        var elem = document.querySelectorAll(selector)[0];
-
-        // change the content to the entity's name
-        elem.innerHTML =
-            '<span class="value">' +
-            entity.data.name +
-            "</span>" +
-            '<span class="view"><button class="view_entity">view</button></span>';
-        // show the element
-        elem.classList.remove("hidden");
-        // add a click handler to show this entity
-        elem.addEventListener("click", function() {
-            // on click print the requested entity to the DOM
-            printEntity(this.parentNode.dataset.entity, this.dataset.id);
-        });
-    };
-}
-
-/**
- *  person constructor, inherits from Entity
- */
-
-function Person(data) {
-    var arr_data_fields = [
-        "birth_year",
-        "eye_color",
-        "gender",
-        "hair_color",
-        "height",
-        "mass",
-        "name",
-        "skin_color"
-    ];
-
-    var arr_associated_fields = [
-        { films: "films" },
-        { species: "species" },
-        { starships: "starships" },
-        { vehicles: "vehicles" }
-    ];
-
-    var heading_field = "name";
-
-    Entity.call(
-        this,
-        data,
-        arr_data_fields,
-        arr_associated_fields,
-        heading_field
-    );
-}
-
-/**
- *  starship constructor, inherits from Entity
- */
-
-function Starship(data) {
-    var arr_data_fields = [
-        "MGLT",
-        "cargo_capacity",
-        "consumables",
-        "cost_in_credits",
-        "crew",
-        "hyperdrive_rating",
-        "length",
-        "manufacturer",
-        "max_atmospheric_speed",
-        "model",
-        "name",
-        "passengers",
-        "starship_class"
-    ];
-
-    var arr_associated_fields = [{ films: "films" }, { pilots: "people" }];
-
-    var heading_field = "name";
-
-    Entity.call(
-        this,
-        data,
-        arr_data_fields,
-        arr_associated_fields,
-        heading_field
-    );
-}
-
-/**
- *  film constructor, inherits from Entity
- */
-
-function Film(data) {
-    var arr_data_fields = [
-        "director",
-        "episode_id",
-        "opening_crawl",
-        "producer",
-        "release_date",
-        "title"
-    ];
-
-    var arr_associated_fields = [
-        { characters: "people" },
-        { planets: "planets" },
-        { species: "species" },
-        { starships: "starships" },
-        { vehicles: "vehicles" }
-    ];
-
-    var heading_field = "title";
-
-    Entity.call(
-        this,
-        data,
-        arr_data_fields,
-        arr_associated_fields,
-        heading_field
-    );
-}
-
-/**
- *  planet constructor, inherits from Entity
- */
-
-function Planet(data) {
-    var arr_data_fields = [
-        "climate",
-        "diameter",
-        "gravity",
-        "name",
-        "orbital_period",
-        "population",
-        "rotation_period",
-        "surface_water",
-        "terrain"
-    ];
-
-    var arr_associated_fields = [{ films: "films" }, { residents: "people" }];
-
-    var heading_field = "name";
-
-    Entity.call(
-        this,
-        data,
-        arr_data_fields,
-        arr_associated_fields,
-        heading_field
-    );
-}
-
-/**
- *  species constructor, inherits from Entity
- */
-
-function Species(data) {
-    var arr_data_fields = [
-        "average_height",
-        "average_lifespan",
-        "classification",
-        "designation",
-        "eye_colors",
-        "hair_colors",
-        "language",
-        "name",
-        "skin_colors"
-    ];
-
-    var arr_associated_fields = [{ films: "films" }, { people: "people" }];
-
-    var heading_field = "name";
-
-    Entity.call(
-        this,
-        data,
-        arr_data_fields,
-        arr_associated_fields,
-        heading_field
-    );
-}
-
-/**
- *  vehicle constructor, inherits from Entity
- */
-
-function Vehicle(data) {
-    var arr_data_fields = [
-        "cargo_capacity",
-        "consumables",
-        "cost_in_credits",
-        "crew",
-        "length",
-        "manufacturer",
-        "max_atmosphering_speed",
-        "model",
-        "name",
-        "passengers",
-        "vehicle_class"
-    ];
-
-    var arr_associated_fields = [{ films: "films" }, { pilots: "people" }];
-
-    var heading_field = "name";
-
-    Entity.call(
-        this,
-        data,
-        arr_data_fields,
-        arr_associated_fields,
-        heading_field
-    );
-}
-
 /**
  *  Self-calling initialisation function
  */
@@ -518,18 +218,7 @@ function Vehicle(data) {
 (async function init() {
     console.clear();
 
-    // setup window object to store data
-    Window.swapi = {
-        people: {},
-        planets: {},
-        species: {},
-        starships: {},
-        vehicles: {},
-        films: {}
-    };
-
-    // start somewhere
-    // printEntity( "films", 1 );
+    // get all data and pass in a callback to print a film
     getAllData(printEntity.bind(null, "films", 1));
 })();
 
@@ -550,8 +239,9 @@ function process(resolve, type, total, cumulative, res) {
 
     // loop over returned data
     for (var item of data.results) {
-        // stor instantiated entities
-        Window.swapi[type][getIdFromURL(item.url)] = instantiate(type, item);
+        var id = getIdFromURL(item.url);
+        // store data
+        updateSwapiData(type, id, item);
     }
 
     // if this type has more data that we don't yet have, call this fn recursively
@@ -572,6 +262,11 @@ function process(resolve, type, total, cumulative, res) {
 }
 
 async function getAllData(callback) {
+    // get swapi data from session - will be empty to begin with
+    var swapi = getFromSession("swapi");
+
+    console.log(swapi);
+
     var arr_types = [
         "people",
         "planets",
@@ -580,6 +275,33 @@ async function getAllData(callback) {
         "films",
         "vehicles"
     ];
+
+    // determine if we have data for each entity
+    var has_data = arr_types.reduce(function(reducer, type) {
+        return Object.keys(swapi[type]).length > 0 && reducer;
+    });
+
+    // if we have the data already
+    if (has_data) {
+        // run the supplied call back
+        callback();
+        // hide the loading bar which is shown by default
+        hideLoadingBar();
+        // don't go to the api for the data
+        return false;
+    }
+
+    // setup object to store data
+    var swapi = {
+        people: {},
+        planets: {},
+        species: {},
+        starships: {},
+        vehicles: {},
+        films: {}
+    };
+
+    setInSession("swapi", swapi);
 
     Window.total_types = arr_types.length;
     Window.completed_types = 0;
@@ -610,10 +332,7 @@ async function getAllData(callback) {
 
             // it annoying if you don't get to see it finish
             setTimeout(function() {
-                var bar_wrapper = document.querySelectorAll(
-                    ".loading_bar_wrapper"
-                )[0];
-                bar_wrapper.classList.add("hidden");
+                hideLoadingBar();
             }, 100);
 
             callback();
@@ -621,4 +340,13 @@ async function getAllData(callback) {
         .catch(function(err) {
             console.log(err);
         });
+}
+
+/**
+ *  Small helper function to locate the loading bar element and hide it
+ */
+
+function hideLoadingBar() {
+    var bar_wrapper = document.querySelectorAll(".loading_bar_wrapper")[0];
+    bar_wrapper.classList.add("hidden");
 }
