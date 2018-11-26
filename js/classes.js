@@ -39,6 +39,12 @@ function Entity(data, arr_data_fields, arr_associated_fields, heading_field) {
                 // extract their entity ids from the urls and add them to this array
                 this.associated[type].push(getIdFromURL(url));
             }
+
+            // if for some reason we had a property for this but no data,
+            // get rid of that property
+            if (!this.associated[type].length) {
+                delete this.associated[type];
+            }
         }
     }
 
