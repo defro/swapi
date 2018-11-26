@@ -123,6 +123,12 @@ async function getEntity(type, id) {
     return entity;
 }
 
+/**
+ *  Gets an instantiated entity, either from the the window object
+ *  or the swapi and uses it's inherited methods to print it's data
+ *  @return void, amendeds the DOM as a side effect
+ */
+
 async function printEntity(type, id) {
     var entity = await getEntity(type, id);
     entity.printData();
@@ -159,7 +165,6 @@ function Entity(data, arr_data_fields, arr_associated_fields, heading_field) {
     }
 
     // populate entity data fields
-
     // loop over data fields
     for (var data_item of this.arr_data_fields) {
         // if this data_item is present
@@ -170,7 +175,6 @@ function Entity(data, arr_data_fields, arr_associated_fields, heading_field) {
     }
 
     // populate entity associated fields
-
     // loop over assocaited fields
     for (var obj_associated of this.arr_associated_fields) {
         var title = Object.keys(obj_associated)[0];
@@ -299,7 +303,11 @@ function Entity(data, arr_data_fields, arr_associated_fields, heading_field) {
         var elem = document.querySelectorAll(selector)[0];
 
         // change the content to the entity's name
-        elem.innerHTML = entity.data.name;
+        elem.innerHTML =
+            '<span class="value">' +
+            entity.data.name +
+            "</span>" +
+            '<span class="view"><button class="view_entity">view</button></span>';
         // show the element
         elem.classList.remove("hidden");
         // add a click handler to show this entity
