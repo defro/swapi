@@ -1,0 +1,142 @@
+body {
+  font-family: helvetica, arial, sans-serif;
+  font-size: 20px;
+  color: #333;
+  margin: 0;
+}
+
+.nav {
+  left: 0;
+  right: 0;
+  top: 0;
+  box-sizing: border-box;
+  padding: 10px;
+  height: 200px;
+  background-color: #ddd;
+  position: fixed;
+  border-bottom: 2px solid white;
+}
+
+.nav .title {
+  float: left;
+}
+
+.nav .title h1 {
+  margin: 0;
+  padding-bottom: 10px;
+}
+
+.nav .links {
+  float: left;
+}
+
+.nav .links ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+.nav .links ul li {
+  margin-bottom: 5px;
+}
+
+.loading_bar_wrapper {
+  box-sizing: border-box;
+  width: 100%;
+  height: 5px;
+  border: 1px solid #ddd;
+  margin: 0 auto;
+}
+
+.loading_bar {
+  height: 100%;
+  background-color: lightblue;
+}
+
+.hidden {
+  display: none;
+}
+
+#container {
+  width: 100%;
+  margin-top: 200px;
+}
+
+.section_container {
+  margin-bottom: 10px;
+  width: 100%;
+  /* float: left; */
+}
+
+.section_container table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.section_container table td {
+  padding: 10px;
+}
+
+.data_item {
+  background-color: #ddd;
+  border-bottom: 1px solid white;
+}
+
+.data_item .field {
+  text-transform: capitalize;
+}
+
+.section_container h2 {
+  margin: 5px;
+  padding: 10px;
+  text-transform: capitalize;
+}
+
+.associated .data_item {
+  padding: 20px;
+}
+
+.associated .data_item:hover {
+  cursor: pointer;
+  background-color: lightblue;
+}
+
+@media screen and (min-width: 400px) {
+  .nav {
+    height: 150px;
+  }
+
+  #container {
+    margin-top: 150px;
+  }
+}
+
+@media screen and (min-width: 750px) {
+  body {
+    font-size: 16px;
+  }
+
+  .nav {
+    height: 65px;
+  }
+
+  .nav .links {
+    margin-left: 20px;
+  }
+
+  #container {
+    margin: 65px auto 0;
+    width: 500px;
+  }
+
+  .associated .data_item {
+    padding: 10px;
+  }
+}
+
+/* @media screen and (min-width: 1000px) {
+  .section_container {
+    width: 31%;
+    margin-right: 10px;
+  }
+} */
