@@ -147,4 +147,12 @@ body {
     .associated .data_item {
         padding: 10px;
     }
+
+    .associated .data_item .view .view_entity {
+        display: none;
+    }
+
+    .associated .data_item:hover .view .view_entity {
+        display: inline-block;
+    }
 }
