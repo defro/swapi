@@ -193,6 +193,8 @@ async function printEntity(type, id) {
     var entity = await getEntity(type, id);
     entity.printData();
     entity.printAssociatedFields();
+    // go to top of page
+    scroll(0, 0);
 }
 
 /**
@@ -264,8 +266,6 @@ function process(resolve, type, total, cumulative, res) {
 async function getAllData(callback) {
     // get swapi data from session - will be empty to begin with
     var swapi = getFromSession("swapi");
-
-    console.log(swapi);
 
     var arr_types = [
         "people",
