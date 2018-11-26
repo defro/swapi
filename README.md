@@ -20,11 +20,6 @@ All of the entities available from the API (people, vehicles, films etc) are ins
 
 Although the styling is fairly basic (not even bootstrap...) the app should be fairly responsive. In the future I'd like to make better use of larger screens.
 
-## Future Development
+## Issues and Future Development
 
-1. View all of type option - button next to entity heading to "View all"
-
-## Issues
-
-1. Viewing a new entity should scroll to the top of the page
-2. Empty catagories shouldn't be printed (though this appears to be a result of strange data being returned from the api, but should be handled better)
+Please see [issues](https://github.com/sauntimo/swapi/issues).
