@@ -1,3 +1,7 @@
+/* -------------- */
+/* Data functions */
+/* -------------- */
+
 /**
  *  returns a promise wrapped XHR
  *  @url string location of api resource
@@ -72,53 +76,34 @@ function getData(type, id) {
 }
 
 /**
- *  Helper function for getting things from Session Storage
- *  @key string key of property to return from storage
- *  @return object from storage, or empty object
+ *  Gets data for a single entity from the SWAPI
+ *  @return object star wars entity
  */
 
-function getFromSession(key) {
-    var value = sessionStorage.getItem(key);
-    value = JSON.parse(value);
-    // if value is null, return empty object
-    return value === null ? {} : value;
-}
+async function getEntity(type, id) {
+    var entity;
 
-/**
- *  Helper function for setting things in Session Storage
- *  @key string key of property to return from storage
- *  @return void
- */
-
-function setInSession(key, data) {
-    var value = JSON.stringify(data);
-    sessionStorage.setItem(key, value);
-}
-
-/**
- *  Helper function for updating swapi data in Session Storage
- *  @type string type of swapi entity
- *  @id numeric id of swapi entity
- *  @return void
- */
-
-function updateSwapiData(type, id, data) {
+    // get swapi data from session storage
     var swapi = getFromSession("swapi");
-    swapi[type][id] = data;
-    setInSession("swapi", swapi);
-}
 
-/**
- *  Helper function for instantiating swapi entity from data
- *  in Session Storage
- *  @type string type of swapi entity
- *  @id numeric id of swapi entity
- *  @return void
- */
+    // if this data is not available locally
+    if (!swapi[type].hasOwnProperty(id)) {
+        // get it the data from the swapi. await the response as the
+        // data is required to build the markup for the page
+        var response = await getXHR(
+            "https://swapi.co/api/" + type + "/" + id + "/"
+        );
 
-function getEntityFromSession(type, id) {
-    var swapi = getFromSession("swapi");
-    return instantiate(type, swapi[type][id]);
+        // parse it
+        var data = JSON.parse(response);
+
+        // store it for access later, saving XHRs
+        // entity = instantiate(type, data);
+        updateSwapiData(type, id, data);
+    }
+
+    entity = getEntityFromSession(type, id);
+    return entity;
 }
 
 /**
@@ -153,158 +138,6 @@ function instantiate(type, data) {
 }
 
 /**
- *  Gets data for a single entity from the SWAPI
- *  @return object star wars entity
- */
-
-async function getEntity(type, id) {
-    var entity;
-
-    // get swapi data from session storage
-    var swapi = getFromSession("swapi");
-
-    // if this data is not available locally
-    if (!swapi[type].hasOwnProperty(id)) {
-        // get it the data from the swapi. await the response as the
-        // data is required to build the markup for the page
-        var response = await getXHR(
-            "https://swapi.co/api/" + type + "/" + id + "/"
-        );
-
-        // parse it
-        var data = JSON.parse(response);
-
-        // store it for access later, saving XHRs
-        // entity = instantiate(type, data);
-        updateSwapiData(type, id, data);
-    }
-
-    entity = getEntityFromSession(type, id);
-    return entity;
-}
-
-/**
- *  Gets an instantiated entity, either from the the window object
- *  or the swapi and uses it's inherited methods to print it's data
- *  @return void, amendeds the DOM as a side effect
- */
-
-async function printEntity(type, id) {
-    var entity = await getEntity(type, id);
-    entity.printData();
-    entity.printAssociatedFields();
-    // go to top of page
-    scroll(0, 0);
-}
-
-/**
- *  returns markup for a list of associated entities
- *  @type string type of swapi entity
- *  @arr_entity_ids array of swapi entity ids
- *  @return string html
- */
-
-function printAssociatedEntities(type, arr_entity_ids) {
-    var html = "";
-    var swapi = getFromSession("swapi");
-
-    html += `<div class="section_container associated" data-entity="${type}">`;
-    html += `<div class="heading"><div class="title"><h2>${type}</h2></div>`;
-    html += `<div class="action"><button class="btn view_all" data-entity="${type}">View all ${type}</button></div></div>`;
-
-    for (var id of arr_entity_ids) {
-        var value = id;
-        // if we have the appropraite value for this, use it
-        if (swapi[type].hasOwnProperty(id)) {
-            var entity = getEntityFromSession(type, id);
-            value =
-                '<span class="value">' +
-                // ensure we're using the correct heading field
-                entity.data[entity.heading_field] +
-                "</span>" +
-                '<span class="view"><button class="btn view_entity">view</button></span>';
-        }
-
-        html += `<div class="data_item" data-id="${id}">${value}</div>`;
-    }
-
-    var arr_elems = document.querySelectorAll;
-
-    html += "</div>";
-    return html;
-}
-
-/**
- *  Adds event listeners to elements
- *  @selector string css selector to match elements to attach events to
- *  @action string type of interaction with elements
- *  @handler function to fire on interaction
- *  @return void
- */
-
-function addEventListeners(selector, action, handler) {
-    // get associated items on the page
-    var arr_elems = document.querySelectorAll(selector);
-    var cnt_elems = arr_elems.length;
-
-    // loop over them
-    for (var idx = 0; idx < cnt_elems; idx++) {
-        var elem = arr_elems[idx];
-        // add event listener
-        elem.addEventListener(action, handler.bind(elem));
-    }
-}
-
-/**
- *  click handler attached to associated items to print thier entities
- *  @this_arg dom element provides context for the function
- */
-
-function associatedClickhandler(this_arg) {
-    printEntity(this.parentNode.dataset.entity, this.dataset.id);
-}
-
-/**
- *  click handler attached to view all buttons to print all entities of type
- *  @this_arg dom element provides context for the function
- */
-
-function viewAllClickhandler(this_arg) {
-    printAllEntity(this.dataset.entity);
-}
-
-/**
- *  Gets an instantiated entity, either from the the window object
- *  or the swapi and uses it's inherited methods to print it's data
- *  @return void, amendeds the DOM as a side effect
- */
-
-async function printAllEntity(type) {
-    var swapi = getFromSession("swapi");
-    var arr_entity_ids = [];
-
-    for (var key in swapi[type]) {
-        arr_entity_ids.push(key);
-    }
-
-    var html = printAssociatedEntities(type, arr_entity_ids);
-
-    document.querySelectorAll("#data")[0].innerHTML = "";
-    document.querySelectorAll("#associated")[0].innerHTML = html;
-
-    addEventListeners(
-        ".associated .data_item",
-        "click",
-        associatedClickhandler
-    );
-
-    addEventListeners(".view_all", "click", viewAllClickhandler);
-
-    // go to top of page
-    scroll(0, 0);
-}
-
-/**
  *	Takes a SWAPI url and gets the type of entity and id
  *  @return numeric entity id
  */
@@ -319,18 +152,6 @@ function getIdFromURL(url) {
     // and return it
     return id;
 }
-
-/**
- *  Self-calling initialisation function
- */
-
-(async function init() {
-    console.clear();
-
-    // get all data and pass in a callback to print a film
-    // getAllData(printEntity.bind(null, "films", 1));
-    getAllData(printAllEntity.bind(null, "people"));
-})();
 
 /**
  *  process the result of a swapi api call for a group of entities
@@ -370,6 +191,11 @@ function process(resolve, type, total, cumulative, res) {
         resolve(type);
     }
 }
+
+/**
+ *  get all the available data from the swapi
+ *  @callback function to fire once all data is available
+ */
 
 async function getAllData(callback) {
     // get swapi data from session - will be empty to begin with
@@ -464,3 +290,202 @@ function hideLoadingBar() {
     var bar_wrapper = document.querySelectorAll(".loading_bar_wrapper")[0];
     bar_wrapper.classList.add("hidden");
 }
+
+/* ----------------- */
+/* Storage functions */
+/* ----------------- */
+
+/**
+ *  Helper function for getting things from Session Storage
+ *  @key string key of property to return from storage
+ *  @return object from storage, or empty object
+ */
+
+function getFromSession(key) {
+    var value = sessionStorage.getItem(key);
+    value = JSON.parse(value);
+    // if value is null, return empty object
+    return value === null ? {} : value;
+}
+
+/**
+ *  Helper function for setting things in Session Storage
+ *  @key string key of property to return from storage
+ *  @return void
+ */
+
+function setInSession(key, data) {
+    var value = JSON.stringify(data);
+    sessionStorage.setItem(key, value);
+}
+
+/**
+ *  Helper function for updating swapi data in Session Storage
+ *  @type string type of swapi entity
+ *  @id numeric id of swapi entity
+ *  @return void
+ */
+
+function updateSwapiData(type, id, data) {
+    var swapi = getFromSession("swapi");
+    swapi[type][id] = data;
+    setInSession("swapi", swapi);
+}
+
+/**
+ *  Helper function for instantiating swapi entity from data
+ *  in Session Storage
+ *  @type string type of swapi entity
+ *  @id numeric id of swapi entity
+ *  @return void
+ */
+
+function getEntityFromSession(type, id) {
+    var swapi = getFromSession("swapi");
+    return instantiate(type, swapi[type][id]);
+}
+
+/* ---------------- */
+/* Markup functions */
+/* ---------------- */
+
+/**
+ *  Gets an instantiated entity, either from the the window object
+ *  or the swapi and uses it's inherited methods to print it's data
+ *  @return void, amendeds the DOM as a side effect
+ */
+
+async function printEntity(type, id) {
+    var entity = await getEntity(type, id);
+    entity.printData();
+    entity.printAssociatedFields();
+    // go to top of page
+    scroll(0, 0);
+}
+
+/**
+ *  returns markup for a list of associated entities
+ *  @type string type of swapi entity
+ *  @arr_entity_ids array of swapi entity ids
+ *  @return string html
+ */
+
+function printAssociatedEntities(type, arr_entity_ids) {
+    var html = "";
+    var swapi = getFromSession("swapi");
+
+    html += `<div class="section_container associated" data-entity="${type}">`;
+    html += `<div class="heading"><div class="title"><h2>${type}</h2></div>`;
+    html += `<div class="action"><button class="btn view_all" data-entity="${type}">View all ${type}</button></div></div>`;
+
+    for (var id of arr_entity_ids) {
+        var value = id;
+        // if we have the appropraite value for this, use it
+        if (swapi[type].hasOwnProperty(id)) {
+            var entity = getEntityFromSession(type, id);
+            value =
+                '<span class="value">' +
+                // ensure we're using the correct heading field
+                entity.data[entity.heading_field] +
+                "</span>" +
+                '<span class="view"><button class="btn view_entity">view</button></span>';
+        }
+
+        html += `<div class="data_item" data-id="${id}">${value}</div>`;
+    }
+
+    var arr_elems = document.querySelectorAll;
+
+    html += "</div>";
+    return html;
+}
+
+/**
+ *  Gets an instantiated entity, either from the the window object
+ *  or the swapi and uses it's inherited methods to print it's data
+ *  @return void, amendeds the DOM as a side effect
+ */
+
+async function printAllEntity(type) {
+    var swapi = getFromSession("swapi");
+    var arr_entity_ids = [];
+
+    for (var key in swapi[type]) {
+        arr_entity_ids.push(key);
+    }
+
+    var html = printAssociatedEntities(type, arr_entity_ids);
+
+    document.querySelectorAll("#data")[0].innerHTML = "";
+    document.querySelectorAll("#associated")[0].innerHTML = html;
+
+    addEventListeners(
+        ".associated .data_item",
+        "click",
+        associatedClickhandler
+    );
+
+    addEventListeners(".view_all", "click", viewAllClickhandler);
+
+    // go to top of page
+    scroll(0, 0);
+}
+
+/* ---------------- */
+/* User Interaction */
+/* ---------------- */
+
+/**
+ *  Adds event listeners to elements
+ *  @selector string css selector to match elements to attach events to
+ *  @action string type of interaction with elements
+ *  @handler function to fire on interaction
+ *  @return void
+ */
+
+function addEventListeners(selector, action, handler) {
+    // get associated items on the page
+    var arr_elems = document.querySelectorAll(selector);
+    var cnt_elems = arr_elems.length;
+
+    // loop over them
+    for (var idx = 0; idx < cnt_elems; idx++) {
+        var elem = arr_elems[idx];
+        // add event listener
+        elem.addEventListener(action, handler.bind(elem));
+    }
+}
+
+/**
+ *  click handler attached to associated items to print thier entities
+ *  @this_arg dom element provides context for the function
+ */
+
+function associatedClickhandler(this_arg) {
+    printEntity(this.parentNode.dataset.entity, this.dataset.id);
+}
+
+/**
+ *  click handler attached to view all buttons to print all entities of type
+ *  @this_arg dom element provides context for the function
+ */
+
+function viewAllClickhandler(this_arg) {
+    printAllEntity(this.dataset.entity);
+}
+
+/* ------------------- */
+/* page initialisation */
+/* ------------------- */
+
+/**
+ *  Self-calling initialisation function
+ */
+
+(async function init() {
+    console.clear();
+
+    // get all data and pass in a callback to print a film
+    // getAllData(printEntity.bind(null, "films", 1));
+    getAllData(printAllEntity.bind(null, "people"));
+})();
