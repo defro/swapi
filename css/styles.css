@@ -29,6 +29,10 @@ body {
     font-size: inherit;
 }
 
+.btn:hover {
+    background-color: #9bc2cf;
+}
+
 /* -----------*/
 /* Sticky Nav */
 /* -----------*/
@@ -123,20 +127,20 @@ body {
 /* Assocaited entities */
 /* ------------------- */
 
-.associated .heading {
+.heading {
     padding: 10px;
 }
 
-.associated .title {
+.heading .title {
     display: inline-block;
 }
 
-.associated .title h2 {
+.heading .title h2 {
     margin: 0;
     padding: 0;
 }
 
-.associated .action {
+.heading .action {
     float: right;
 }
 
@@ -153,7 +157,7 @@ body {
     background-color: lightblue;
 }
 
-.associated .data_item:hover .view .view_entity {
+.associated .data_item:hover .btn {
     background-color: #9bc2cf;
 }
 

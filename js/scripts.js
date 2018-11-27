@@ -298,7 +298,7 @@ async function printAllEntity(type) {
         associatedClickhandler
     );
 
-    addEventListeners(".associated .view_all", "click", viewAllClickhandler);
+    addEventListeners(".view_all", "click", viewAllClickhandler);
 
     // go to top of page
     scroll(0, 0);

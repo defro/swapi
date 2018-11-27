@@ -1,7 +1,14 @@
 // top level Entity constructor
-function Entity(data, arr_data_fields, arr_associated_fields, heading_field) {
+function Entity(
+    data,
+    arr_data_fields,
+    arr_associated_fields,
+    heading_field,
+    type
+) {
     this.arr_data_fields = arr_data_fields;
     this.arr_associated_fields = arr_associated_fields;
+    this.type = type;
 
     this.data = {};
     this.associated = {};
@@ -53,12 +60,14 @@ function Entity(data, arr_data_fields, arr_associated_fields, heading_field) {
      */
 
     this.printData = function() {
-        var html =
-            '<div class="section_container">' +
-            "<h2>" +
-            this.data[this.heading_field] +
-            "</h2>" +
-            "<table><tbody>";
+        var html = `<div class="section_container" data-entity="${this.type}">`;
+        html += `<div class="heading"><div class="title"><h2>${
+            this.data[this.heading_field]
+        }</h2></div>`;
+        html += `<div class="action"><button class="btn view_all" data-entity="${
+            this.type
+        }">View all ${this.type}</button></div></div>`;
+        html += `<table><tbody>`;
 
         for (var key in this.data) {
             // we've already used the name as the title
@@ -106,11 +115,7 @@ function Entity(data, arr_data_fields, arr_associated_fields, heading_field) {
             associatedClickhandler
         );
 
-        addEventListeners(
-            ".associated .view_all",
-            "click",
-            viewAllClickhandler
-        );
+        addEventListeners(".view_all", "click", viewAllClickhandler);
     };
 }
 
@@ -144,7 +149,8 @@ function Person(data) {
         data,
         arr_data_fields,
         arr_associated_fields,
-        heading_field
+        heading_field,
+        "people"
     );
 }
 
@@ -178,7 +184,8 @@ function Starship(data) {
         data,
         arr_data_fields,
         arr_associated_fields,
-        heading_field
+        heading_field,
+        "starships"
     );
 }
 
@@ -211,7 +218,8 @@ function Film(data) {
         data,
         arr_data_fields,
         arr_associated_fields,
-        heading_field
+        heading_field,
+        "films"
     );
 }
 
@@ -241,7 +249,8 @@ function Planet(data) {
         data,
         arr_data_fields,
         arr_associated_fields,
-        heading_field
+        heading_field,
+        "planets"
     );
 }
 
@@ -271,7 +280,8 @@ function Species(data) {
         data,
         arr_data_fields,
         arr_associated_fields,
-        heading_field
+        heading_field,
+        "species"
     );
 }
 
@@ -303,6 +313,7 @@ function Vehicle(data) {
         data,
         arr_data_fields,
         arr_associated_fields,
-        heading_field
+        heading_field,
+        "vehicles"
     );
 }
