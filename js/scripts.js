@@ -486,6 +486,6 @@ function viewAllClickhandler(this_arg) {
     console.clear();
 
     // get all data and pass in a callback to print a film
-    // getAllData(printEntity.bind(null, "films", 1));
-    getAllData(printAllEntity.bind(null, "people"));
+    getAllData(printEntity.bind(null, "films", 1));
+    // getAllData(printAllEntity.bind(null, "people"));
 })();
