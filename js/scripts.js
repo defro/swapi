@@ -198,6 +198,113 @@ async function printEntity(type, id) {
 }
 
 /**
+ *  returns markup for a list of associated entities
+ *  @type string type of swapi entity
+ *  @arr_entity_ids array of swapi entity ids
+ *  @return string html
+ */
+
+function printAssociatedEntities(type, arr_entity_ids) {
+    var html = "";
+    var swapi = getFromSession("swapi");
+
+    html += `<div class="section_container associated" data-entity="${type}">`;
+    html += `<div class="heading"><div class="title"><h2>${type}</h2></div>`;
+    html += `<div class="action"><button class="btn view_all" data-entity="${type}">View all ${type}</button></div></div>`;
+
+    for (var id of arr_entity_ids) {
+        var value = id;
+        // if we have the appropraite value for this, use it
+        if (swapi[type].hasOwnProperty(id)) {
+            var entity = getEntityFromSession(type, id);
+            value =
+                '<span class="value">' +
+                // ensure we're using the correct heading field
+                entity.data[entity.heading_field] +
+                "</span>" +
+                '<span class="view"><button class="btn view_entity">view</button></span>';
+        }
+
+        html += `<div class="data_item" data-id="${id}">${value}</div>`;
+    }
+
+    var arr_elems = document.querySelectorAll;
+
+    html += "</div>";
+    return html;
+}
+
+/**
+ *  Adds event listeners to elements
+ *  @selector string css selector to match elements to attach events to
+ *  @action string type of interaction with elements
+ *  @handler function to fire on interaction
+ *  @return void
+ */
+
+function addEventListeners(selector, action, handler) {
+    // get associated items on the page
+    var arr_elems = document.querySelectorAll(selector);
+    var cnt_elems = arr_elems.length;
+
+    // loop over them
+    for (var idx = 0; idx < cnt_elems; idx++) {
+        var elem = arr_elems[idx];
+        // add event listener
+        elem.addEventListener(action, handler.bind(elem));
+    }
+}
+
+/**
+ *  click handler attached to associated items to print thier entities
+ *  @this_arg dom element provides context for the function
+ */
+
+function associatedClickhandler(this_arg) {
+    printEntity(this.parentNode.dataset.entity, this.dataset.id);
+}
+
+/**
+ *  click handler attached to view all buttons to print all entities of type
+ *  @this_arg dom element provides context for the function
+ */
+
+function viewAllClickhandler(this_arg) {
+    printAllEntity(this.dataset.entity);
+}
+
+/**
+ *  Gets an instantiated entity, either from the the window object
+ *  or the swapi and uses it's inherited methods to print it's data
+ *  @return void, amendeds the DOM as a side effect
+ */
+
+async function printAllEntity(type) {
+    var swapi = getFromSession("swapi");
+    var arr_entity_ids = [];
+
+    for (var key in swapi[type]) {
+        arr_entity_ids.push(key);
+    }
+
+    var html = printAssociatedEntities(type, arr_entity_ids);
+
+    document.querySelectorAll("#data")[0].innerHTML = "";
+    document.querySelectorAll("#associated")[0].innerHTML = html;
+
+    addEventListeners(
+        ".associated .data_item",
+        "click",
+        associatedClickhandler
+    );
+
+    addEventListeners(".associated .view_all", "click", viewAllClickhandler);
+
+    // go to top of page
+    scroll(0, 0);
+}
+
+/**
  *	Takes a SWAPI url and gets the type of entity and id
  *  @return numeric entity id
  */
@@ -221,7 +328,8 @@ function getIdFromURL(url) {
     console.clear();
 
     // get all data and pass in a callback to print a film
-    getAllData(printEntity.bind(null, "films", 1));
+    // getAllData(printEntity.bind(null, "films", 1));
+    getAllData(printAllEntity.bind(null, "people"));
 })();
 
 /**

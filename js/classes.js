@@ -93,88 +93,24 @@ function Entity(data, arr_data_fields, arr_associated_fields, heading_field) {
         var swapi = getFromSession("swapi");
 
         // loop over assocaited fields
-        for (var entity in this.associated) {
-            html +=
-                '<div class="section_container associated" data-entity="' +
-                entity +
-                '">' +
-                "<h2>" +
-                entity +
-                "</h2>";
-
-            for (var id of this.associated[entity]) {
-                var value = id;
-
-                if (swapi[entity].hasOwnProperty(id)) {
-                    value = swapi[entity][id].name;
-                }
-
-                html +=
-                    '<div class="data_item' +
-                    (value === id ? " hidden" : "") +
-                    '" ' +
-                    'data-id="' +
-                    id +
-                    '">' +
-                    value +
-                    "</div>";
-            }
-
-            html += "</div>";
+        for (var type in this.associated) {
+            html += printAssociatedEntities(type, this.associated[type]);
         }
 
         // add built html to the DOM
         document.getElementById("associated").innerHTML = html;
-        this.populateData();
-    };
 
-    /**
-     *  Loop over all assocaited items, get the relevant data and process them
-     */
+        addEventListeners(
+            ".associated .data_item",
+            "click",
+            associatedClickhandler
+        );
 
-    this.populateData = function() {
-        // loop over associated types
-        for (var type in this.associated) {
-            // loop over entity ids
-            for (var id of this.associated[type]) {
-                // get the data, either locally or from the swapi
-                getData(type, id)
-                    // add it to the page
-                    .then(this.populateDataItem.bind(this_entity, type, id));
-            }
-        }
-    };
-
-    /**
-     *  For an individual associated item, locate it in them DOM, set it's name,
-     *  show it, and add click handler
-     *  @type string type of starwars entity
-     *  @id numeric id of starwas entity
-     *  @entity instantiated starwars entity
-     */
-
-    this.populateDataItem = function(type, id, data) {
-        // instantiate this entity
-        var entity = getEntityFromSession(type, id);
-
-        var selector =
-            '.associated[data-entity="' + type + '"] [data-id="' + id + '"]';
-        var elem = document.querySelectorAll(selector)[0];
-
-        // change the content to the entity's name
-        elem.innerHTML =
-            '<span class="value">' +
-            // ensure we're using the correct heading field
-            data[entity.heading_field] +
-            "</span>" +
-            '<span class="view"><button class="view_entity">view</button></span>';
-        // show the element
-        elem.classList.remove("hidden");
-        // add a click handler to show this entity
-        elem.addEventListener("click", function() {
-            // on click print the requested entity to the DOM
-            printEntity(this.parentNode.dataset.entity, this.dataset.id);
-        });
+        addEventListeners(
+            ".associated .view_all",
+            "click",
+            viewAllClickhandler
+        );
     };
 }
 
