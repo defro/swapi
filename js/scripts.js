@@ -211,7 +211,7 @@ function process(resolve, type, total, cumulative, res) {
     // to make another request. Pass in the all the args we need using bind()
     if (total > cumulative) {
         // Annoyingly "next page" URLs are supplied as http
-        var nextPage = data.next.replace(/^http:/, "https");
+        var nextPage = data.next.replace(/^http:/, "https:");
         getXHR(nextPage).then(
             process.bind(null, resolve, type, total, cumulative)
         );
