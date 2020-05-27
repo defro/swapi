@@ -53,7 +53,7 @@ function getData(type, id) {
             // but if we haven't got the data
         } else {
             // request it from the swapi (returns a promise)
-            getXHR("https://swapi.co/api/" + type + "/" + id + "/")
+            getXHR("https://swapi.dev/api/" + type + "/" + id + "/")
                 .then(function(res) {
                     // parse the resulting json
                     var data = JSON.parse(res);
