@@ -3,6 +3,37 @@
 /* -------------- */
 
 /**
+ * Helper method for cross-browser handling of CORS requests
+ * taken from https://humanwhocodes.com/blog/2010/05/25/cross-domain-ajax-with-cross-origin-resource-sharing/
+ * @method string request verb
+ * @url string location of api resource
+ */
+
+function createCORSRequest(method, url) {
+  var xhr = new XMLHttpRequest();
+  if ("withCredentials" in xhr) {
+
+    // Check if the XMLHttpRequest object has a "withCredentials" property.
+    // "withCredentials" only exists on XMLHTTPRequest2 objects.
+    xhr.open(method, url, true);
+
+  } else if (typeof XDomainRequest != "undefined") {
+
+    // Otherwise, check if XDomainRequest.
+    // XDomainRequest only exists in IE, and is IE's way of making CORS requests.
+    xhr = new XDomainRequest();
+    xhr.open(method, url);
+
+  } else {
+
+    // Otherwise, CORS is not supported by the browser.
+    xhr = null;
+
+  }
+  return xhr;
+}
+
+/**
  *  returns a promise wrapped XHR
  *  @url string location of api resource
  *  @return promise resolving with swapi data
@@ -10,10 +41,11 @@
 
 function getXHR(url) {
     var xhr_promise = new Promise(function(resolve, reject) {
-        var xhr = window.XMLHttpRequest
-            ? new XMLHttpRequest()
-            : new ActiveXObject("Microsoft.XMLHTTP");
-        xhr.open("GET", url);
+        var xhr = createCORSRequest('GET', url);
+        if (!xhr) {
+            throw new Error('CORS not supported');
+        }
+        xhr.open(url);
 
         xhr.onreadystatechange = function() {
             if (xhr.readyState > 3) {
@@ -34,6 +66,7 @@ function getXHR(url) {
 
     return xhr_promise;
 }
+
 
 /**
  *  gets data from the window object if available or api if not
@@ -91,7 +124,7 @@ async function getEntity(type, id) {
         // get it the data from the swapi. await the response as the
         // data is required to build the markup for the page
         var response = await getXHR(
-            "https://swapi.co/api/" + type + "/" + id + "/"
+            "https://swapi.dev/api/" + type + "/" + id + "/"
         );
 
         // parse it
@@ -257,7 +290,7 @@ async function getAllData(callback) {
         // all the data for that type has been retrieved
         arr_promises.push(
             new Promise(function(resolve, reject) {
-                getXHR("https://swapi.co/api/" + type + "/")
+                getXHR("https://swapi.dev/api/" + type + "/")
                     .then(process.bind(null, resolve, type, total, cumulative))
                     .catch(function(err) {
                         reject(err);
