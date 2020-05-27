@@ -4,7 +4,7 @@
 
 Small pure js app which makes use of the Star Wars API. See it in action at [sauntimo.github.io/swapi](https://sauntimo.github.io/swapi).
 
-The idea for this app was to use pure js and no libraries or tools whatsoever to build a small app to explore data from the Star Wars API (SWAPI) at [swapi.co](https://swapi.co).
+The idea for this app was to use pure js and no libraries or tools whatsoever to build a small app to explore data from the Star Wars API (SWAPI) at [swapi.dev](https://swapi.dev).
 
 ## Planning
 
