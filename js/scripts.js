@@ -45,7 +45,6 @@ function getXHR(url) {
         if (!xhr) {
             throw new Error('CORS not supported');
         }
-        xhr.open(url);
 
         xhr.onreadystatechange = function() {
             if (xhr.readyState > 3) {
