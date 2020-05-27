@@ -210,7 +210,9 @@ function process(resolve, type, total, cumulative, res) {
     // if this type has more data that we don't yet have, call this fn recursively
     // to make another request. Pass in the all the args we need using bind()
     if (total > cumulative) {
-        getXHR(data.next).then(
+        // Annoyingly "next page" URLs are supplied as http
+        var nextPage = data.next.replace(/^http:/, "https");
+        getXHR(nextPage).then(
             process.bind(null, resolve, type, total, cumulative)
         );
     } else {
